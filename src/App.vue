@@ -4,12 +4,7 @@
 		<hr>
 		<br>
 		<div class="content-list" v-if="!isloading">
-			<div class="item" v-for=" item in itemList " :key="item.uuid4">
-				<img :src=" item.image" alt="">
-				<p v-text="'Nombre: ' + item.name.esp"></p>
-				<p v-text=" 'Precio: ' + '$' +   item.suggested_budget "></p>
-				<p v-text="fnGetCategory(item.category_type)"></p>
-			</div>
+			<Category :item="item" v-for=" item in itemList " :key="item.uuid4" />
 			<p class="no-data" v-if="itemList.length == 0 ">No hay datos</p>
 		</div>
 		<img src="@/assets/loading.gif" class="loading" v-else alt="loading">
@@ -17,18 +12,18 @@
 </template>
 
 <script>
+	import Category from '@/components/Category'
 	export default {
 		name: 'App',
-		components: {},
+		components: {
+			Category
+		},
 		data: () => ({
 			tempList: [],
 			itemList: [],
 			isloading: true,
 		}),
 		methods: {
-
-
-
 			fetchTime(url, options, timeout = 10000) {
 				return Promise.race([
 					fetch(url, options),
@@ -36,18 +31,6 @@
 						setTimeout(() => reject(new Error('timeout')), timeout)
 					)
 				]);
-			},
-			fnGetCategory(categoryId) {
-				switch (categoryId) {
-					case 1:
-						return 'Normal';
-					case 2:
-						return 'Libre';
-					case 3:
-						return 'Personalizada';
-					default:
-						return '-';
-				}
 			},
 			async fnApiGetData() {
 				const headers = {
@@ -95,6 +78,10 @@
 
 
 <style>
+	* {
+		box-sizing: border-box;
+	}
+
 	body {
 		background: rgba(0, 0, 0, .05);
 	}
@@ -110,12 +97,15 @@
 	}
 
 	.search {
+		width: 300px; 
 		font-size: 24px;
-		border: 2px solid rgba(0, 0, 0, .2);
-		box-shadow: 0px 5px 10px rgba(0, 0, 0, .1);
 		margin-bottom: 30px;
 		border-radius: 8px;
 		padding: 0.5rem 1rem;
+		outline: none !important;
+		border: none;
+		box-shadow: 0px 5px 10px rgba(0, 0, 0, .1);
+		transition: all 0.5s;
 	}
 
 	.search:focus {
@@ -132,25 +122,7 @@
 		width: 100%;
 	}
 
-	.item {
-		width: 27.5%;
-		margin-bottom: 1rem;
-		padding: 1.5rem 0.5rem;
-		border: 2px solid rgba(0, 0, 0, .2);
-		background-color: white;
-		box-shadow: 5px 5px 10px rgba(0, 0, 0, .1);
-		border-radius: 10px;
-	}
 
-	.item>img {
-		width: 100px;
-		height: 100px;
-		border-radius: 15px;
-		background-color: gray;
-		object-fit: cover;
-		border: 1px solid rgba(0, 0, 0, .5);
-		box-shadow: 2px 2px 5px rgba(0, 0, 0, .1);
-	}
 
 	.loading {
 		height: 300px;
@@ -165,17 +137,8 @@
 	}
 
 	@media (max-width: 600px) {
-		.item {
-			width: 100%;
-			padding: 1rem;
-			margin-bottom: 1rem;
-		}
-	}
-
-
-	@media (min-width: 600px) and (max-width: 900px) {
-		.item {
-			width: 43%;
+		.search {
+			width: 100%; 
 		}
 	}
 </style>
