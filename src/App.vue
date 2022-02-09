@@ -1,6 +1,6 @@
 <template>
 	<div id="app">
-		<input type="text" class="search" @input="fnSearch($event.target.value)">
+		<input type="text" placeholder="Buscar..." class="search" @input="fnSearch($event.target.value)">
 		<hr>
 		<br>
 		<div class="content-list" v-if="!isloading">
@@ -9,7 +9,7 @@
 				<p v-text="'Nombre: ' + item.name.esp"></p>
 				<p v-text=" 'Precio: ' + '$' +   item.suggested_budget "></p>
 				<p v-text="fnGetCategory(item.category_type)"></p>
-			</div> 
+			</div>
 			<p class="no-data" v-if="itemList.length == 0 ">No hay datos</p>
 		</div>
 		<img src="@/assets/loading.gif" class="loading" v-else alt="loading">
@@ -19,14 +19,24 @@
 <script>
 	export default {
 		name: 'App',
-		components: {
-		},
+		components: {},
 		data: () => ({
 			tempList: [],
 			itemList: [],
 			isloading: true,
 		}),
 		methods: {
+
+
+
+			fetchTime(url, options, timeout = 10000) {
+				return Promise.race([
+					fetch(url, options),
+					new Promise((_, reject) =>
+						setTimeout(() => reject(new Error('timeout')), timeout)
+					)
+				]);
+			},
 			fnGetCategory(categoryId) {
 				switch (categoryId) {
 					case 1:
@@ -43,24 +53,34 @@
 				const headers = {
 					Authorization: '5bc95bf034d900548243a59e2296bd683729bd75057879fd0f877d3adc7d1db6bedbfccb47aca04e44ef28adf4c3e9e72afe2f2b295b3bf08e2a47ec75f9607d',
 					'Content-Type': 'application/json',
-
 				};
-				console.log('Geting data');
 				this.isloading = true;
-				await fetch('https://apitesting.plerk.io/v2/category', {
+				await this.fetchTime('https://apitesting.plerk.io/v2/category', {
 						headers
 					})
-					.then(response => response.json())
+					.then(response => {
+						if (response.status == 200) {
+							return response.json();
+						} else {
+							alert('Algo salió mal, vuelvelo a intentar mas tarde.');
+						}
+					})
 					.then(response => {
 						this.tempList = response.data || [];
 						this.itemList = [...this.tempList];
-					}).catch(err => console.log(err.code));
+					}).catch(err => {
+						console.table(err);
+						if (err.message == 'timeout') {
+							alert('Tiempo de espera superado, vuélvelo a intentar mas tarde');
+						}
+					});
 				this.isloading = false;
 
 			},
 			fnSearch(value) {
 				if (value && value !== '') {
-					this.itemList = this.tempList.filter(item =>  item.name.esp.toLowerCase()?.includes(value.toLowerCase()))
+					this.itemList = this.tempList.filter(item => item.name.esp.toLowerCase().includes(value
+						.toLowerCase()))
 				} else {
 					this.itemList = [...this.tempList];
 
@@ -97,9 +117,10 @@
 		border-radius: 8px;
 		padding: 0.5rem 1rem;
 	}
+
 	.search:focus {
 		outline: none !important;
-		border:1px solid rgba(0, 0, 0, .5);
+		border: 1px solid rgba(0, 0, 0, .5);
 		box-shadow: 0px 5px 10px rgba(0, 0, 0, .5);
 	}
 
@@ -136,7 +157,7 @@
 		width: 300px;
 	}
 
-	.no-data{
+	.no-data {
 		width: 100%;
 		text-align: center;
 		font-size: 34px;
@@ -147,16 +168,14 @@
 		.item {
 			width: 100%;
 			padding: 1rem;
-			margin-bottom: 1rem ;
+			margin-bottom: 1rem;
 		}
 	}
 
 
-	@media ( min-width: 600px) and ( max-width: 900px) {
+	@media (min-width: 600px) and (max-width: 900px) {
 		.item {
 			width: 43%;
 		}
 	}
-
-
 </style>
